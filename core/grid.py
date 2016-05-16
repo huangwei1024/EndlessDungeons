@@ -17,8 +17,17 @@
 
 import msgpack
 
-from block import (
-	Space
+from block import Space, Wall
+
+Directions8 = (
+	(0, 1),
+	(1, 0),
+	(0, -1),
+	(-1, 0),
+	(1, 1),
+	(-1, 1),
+	(1, -1),
+	(-1, -1),
 )
 
 class Grid(object):
@@ -51,6 +60,31 @@ class GridsMatrix(object):
 		ret = GridsMatrix(width, height)
 		ret.mat = mat
 		return ret
+
+	def set(self, x, y, block, obj=None):
+		self.mat[y][x] = Grid(block, obj)
+
+	def wrapWall(self):
+		wallset = set()
+		for y in xrange(self.height):
+			for x in xrange(self.width):
+				if not self.mat[y][x].block.visible:
+					continue
+				for d in Directions8:
+					dx = x + d[0]
+					dy = y + d[1]
+					if dx < 0 or dy < 0 or dx >= self.width or dy >= self.height:
+						continue
+					if not self.mat[dy][dx].block.visible:
+						wallset.add((dx, dy))
+		for xy in wallset:
+			self.mat[xy[1]][xy[0]] = Grid(Wall())
+
+	def show(self):
+		mat = [[self.mat[y][x].block.char for x in xrange(self.width)] for y in xrange(self.height)]
+		lines = [''.join(mat[y]) for y in xrange(self.height)]
+		return '\n'.join(lines)
+
 
 
 

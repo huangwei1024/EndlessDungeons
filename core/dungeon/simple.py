@@ -18,6 +18,8 @@
 # algorithm like
 # http://www.roguebasin.com/index.php?title=A_Simple_Dungeon_Generator_for_Python_2_or_3
 
+from __future__ import absolute_import
+
 import random
 from collections import namedtuple
 
@@ -36,7 +38,6 @@ class Generator(object):
 		
 		self.room_list = []
 		self.corridor_list = []
-		self.tiles_level = []
 
 	def _getRoom(self):
 		w = random.randint(self.min_room_xy, self.max_room_xy)
@@ -57,7 +58,11 @@ class Generator(object):
 			x_overlap = True
 		if not (room2.y + room2.h < room1.y or room1.y + room1.h < room2.y):
 			y_overlap = True
-			
+	
+	def _fillGrid(self, grids, room, block):
+		for x in xrange(room.x, room.x + room.w + 1):
+			for y in xrange(room.y, room.y + room.h + 1):
+				grids.set(x, y, block)
 
 	def generate(self):
 		# build rooms
@@ -84,7 +89,19 @@ class Generator(object):
 			room1, room2 = random.sample(self.room_list, 2)
 			self._joinRooms(room1, room2)
 
+		# output
+		from core.grid import GridsMatrix
+		from core import block
 
+		ret = GridsMatrix(self.width, self.height)
+		for room in self.room_list:
+			self._fillGrid(ret, room, block.Road())
+
+		for room in self.corridor_list:
+			self._fillGrid(ret, room, block.Road())
+
+		ret.wrapWall()
+		return ret
 
 
 

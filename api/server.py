@@ -24,25 +24,59 @@ import tornado.web
 
 from core import dungeon
 
+StrConvList = [
+	lambda s: None if len(s) == 0 else 1/0,
+	lambda s: int(s),
+	lambda s: float(s),
+	lambda s: s[1:-1] if s[0] == '\'' and s[0] == '"' else 1/0,
+	lambda s: s[1:-1].split(',') if s[0] == '[' and s[-1] == ']' else 1/0,
+]
+
+def convertStrDict(d):
+	ret = {}
+	for k, v in d.iteritems():
+		vv = v
+		try:
+			sv = v.replace(';', '').replace(' ', '').replace('\t', '').replace('\n', '')
+			vv = eval(sv, {}, {})
+		except:
+			pass
+		# print type(v), v, type(vv), vv
+		ret[k] = vv
+	print ret
+	return ret
+
+def ascii2html(s):
+	return s
+	# return s.replace('\n', '<br/>\n').replace(' ', '&nbsp;')
+
 class DungeonsHandler(tornado.web.RequestHandler):
 	def get(self):
-		modname = self.get_argument('mod')
-		w = int(self.get_argument('w', 128))
-		h = int(self.get_argument('h', 128))
 		kwargs = {k: vl[0] for k, vl in self.request.arguments.iteritems()}
-		kwargs.pop('mod', None)
-		kwargs.pop('w', None)
-		kwargs.pop('h', None)
+		kwargs = convertStrDict(kwargs)
+
+		modname = kwargs.pop('mod', 'simple')
+		w = kwargs.pop('w', 64)
+		h = kwargs.pop('h', 64)
+		show = kwargs.pop('show', True)
 
 		obj = dungeon.newGenerator(modname, w, h, kwargs)
-		obj.generate()
+		grids = obj.generate()
+		if show:
+			self.render('dungeons.html', map=ascii2html(grids.show()), mod=modname, width=w, height=h, kwargs=kwargs)
+		else:
+			self.write(grids.show())
 
 
 def main():
 	application = tornado.web.Application([
 		(r"/dungeons", DungeonsHandler),
 	],
-	debug=True, autoreload=True, serve_traceback=True)
+	debug=True,
+	autoreload=True,
+	serve_traceback=True,
+	static_path='../static/',
+	template_path='../static/template/')
 
 	application.listen(8181)
 	print 'server listen...'
