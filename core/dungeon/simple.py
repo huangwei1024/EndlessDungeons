@@ -57,6 +57,10 @@ class Generator(object):
 			x_overlap = True
 		if not (room2.y + room2.h < room1.y or room1.y + room1.h < room2.y):
 			y_overlap = True
+
+		if x_overlap:
+			x = random.randint(max(room1.x, room2.x), min(room1.x + room1.w, room2.x + room2.w))
+			y1 = min(room1.y + room1.h, room1.y + room1.w)
 	
 	def _fillGrid(self, grids, room, block):
 		for x in xrange(room.x, room.x + room.w + 1):
