@@ -34,12 +34,20 @@ class Wall(_VisibleObject):
 class Road(_VisibleObject, Walkable):
 	Char = '.'
 
-class Door(_VisibleObject, Walkable, Lockable):
-	Char = '+'
+	def __init__(self, id=None):
+		self.id = id
 
 	@property
 	def char(self):
-		return Door.Char if self.locked else Road.Char
+		return str(self.id) if self.id else self.Char
+
+class Door(_VisibleObject, Walkable, Lockable):
+	LockedChar = '+'
+	UnlockedChar = '-'
+
+	@property
+	def char(self):
+		return Door.LockedChar if self.locked else Door.UnlockedChar
 
 class Upstair(_VisibleObject, Walkable):
 	Char = 'S'

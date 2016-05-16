@@ -22,7 +22,7 @@ class Prototype(object):
 		return self.Char
 
 	def serialize(self):
-		return self.Char
+		return self.char
 
 	@staticmethod
 	def deserialize(s):

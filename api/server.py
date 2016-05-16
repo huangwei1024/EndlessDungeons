@@ -18,6 +18,7 @@ import sys
 sys.path.append('../')
 
 import signal
+import pprint
 
 import tornado.ioloop
 import tornado.web
@@ -63,7 +64,11 @@ class DungeonsHandler(tornado.web.RequestHandler):
 		grids = obj.generate()
 		if show:
 			rooms = obj.getRooms()
-			self.render('dungeons.html', map=ascii2html(grids.show()), mod=modname, width=w, height=h, rooms=rooms, kwargs=kwargs)
+			settings = obj.getSettings()
+			settings.update(kwargs)
+			rooms = pprint.pformat(rooms, indent=2)
+			settings = pprint.pformat(settings, indent=2)
+			self.render('dungeons.html', map=ascii2html(grids.show()), mod=modname, width=w, height=h, rooms=rooms, settings=settings)
 		else:
 			self.write(grids.show())
 

@@ -36,7 +36,7 @@ class Grid(object):
 		self.obj = obj
 
 	def serialize(self):
-		return self.block.char
+		return self.block.serialize()
 
 	@staticmethod
 	def deserialize(s):

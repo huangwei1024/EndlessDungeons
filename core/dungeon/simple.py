@@ -22,10 +22,16 @@ from __future__ import absolute_import
 
 import random
 
-from core.dungeon.base import Room, isRoomOverlapping
+from core.dungeon.base import (
+	GeneratorBase,
+	Room,
+	isRoomOverlapping,
+)
 
-class Generator(object):
+class Generator(GeneratorBase):
 	def __init__(self, width=64, height=64, max_rooms=15, min_room_xy=5, max_room_xy=10, rooms_overlap=False, random_connections=1, random_spurs=3, **kwargs):
+		super(Generator, self).__init__()
+
 		self.width = width
 		self.height = height
 		self.max_rooms = max_rooms
@@ -58,13 +64,25 @@ class Generator(object):
 		if not (room2.y + room2.h < room1.y or room1.y + room1.h < room2.y):
 			y_overlap = True
 
+		xs = sorted([room1.x, room1.x, room1.x + room1.w, room2.x + room2.w])
+		ys = sorted([room1.y, room2.y, room1.y + room1.h, room2.y + room2.h])
 		if x_overlap:
 			x = random.randint(max(room1.x, room2.x), min(room1.x + room1.w, room2.x + room2.w))
-			y1 = min(room1.y + room1.h, room1.y + room1.w)
+			self.corridor_list.append(Room(x, ys[1], 1, ys[2] - ys[1]))
+
+		elif y_overlap:
+			y = random.randint(max(room1.y, room2.y), min(room1.y + room1.h, room2.y + room2.h))
+			self.corridor_list.append(Room(xs[1], y, xs[2] - xs[1], 1))
+
+		else:
+			x = random.randint(xs[1], xs[2])
+			y = random.randint(ys[1], ys[2])
+			# self.corridor_list.append(Room(, , ))
+
 	
 	def _fillGrid(self, grids, room, block):
-		for x in xrange(room.x, room.x + room.w + 1):
-			for y in xrange(room.y, room.y + room.h + 1):
+		for x in xrange(room.x, room.x + room.w):
+			for y in xrange(room.y, room.y + room.h):
 				grids.set(x, y, block)
 
 	def generate(self):
@@ -97,8 +115,8 @@ class Generator(object):
 		from core import block
 
 		ret = GridsMatrix(self.width, self.height)
-		for room in self.room_list:
-			self._fillGrid(ret, room, block.Road())
+		for i, room in enumerate(self.room_list):
+			self._fillGrid(ret, room, block.Road(i + 1))
 
 		for room in self.corridor_list:
 			self._fillGrid(ret, room, block.Road())
@@ -107,7 +125,7 @@ class Generator(object):
 		return ret
 
 	def getRooms(self):
-		return self.room_list
+		return self.room_list + [None] + self.corridor_list
 
 
 
