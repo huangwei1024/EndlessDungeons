@@ -15,3 +15,31 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+
+def newGenerator(modname, width, height, kwargs):
+	g = globals()
+	# if hasattr(g, modname):
+	# 	mod = getattr(g, modname)
+	# 	modpath = mod.__file__
+	# 	print mod, 'existed, reload', modpath
+	# 	if modpath.endswith('.py'):
+	# 		try:
+	# 			os.remove(modpath + 'c')
+	# 		except Exception, e:
+	# 			pass
+	# 		try:
+	# 			os.remove(modpath + 'o')
+	# 		except Exception, e:
+	# 			pass
+	# 	else:
+	# 		try:
+	# 			os.remove(modpath)
+	# 		except Exception, e:
+	# 			pass
+	# 	delattr(g, modname)
+
+	mod = __import__(modname, g)
+	cls = mod.Generator
+	obj = cls(width=width, height=height, **kwargs)
+	return obj

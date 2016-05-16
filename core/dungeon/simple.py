@@ -23,7 +23,7 @@ from collections import namedtuple
 
 Room = namedtuple('Room', ('x', 'y', 'w', 'h'))
 
-class SimpleGenerator(object):
+class Generator(object):
 	def __init__(self, width=64, height=64, max_rooms=15, min_room_xy=5, max_room_xy=10, rooms_overlap=False, random_connections=1, random_spurs=3, **kwargs):
 		self.width = width
 		self.height = height
@@ -53,11 +53,10 @@ class SimpleGenerator(object):
 
 	def _joinRooms(self, room1, room2):
 		x_overlap = y_overlap = False
-		if not (r.x + r.w < room.x or room.x + room.w < r.x):
+		if not (room2.x + room2.w < room1.x or room1.x + room1.w < room2.x):
 			x_overlap = True
-		if not (r.y + r.h < room.y or room.y + room.h < r.y):
+		if not (room2.y + room2.h < room1.y or room1.y + room1.h < room2.y):
 			y_overlap = True
-
 			
 
 	def generate(self):

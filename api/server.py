@@ -14,20 +14,45 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import sys
+sys.path.append('../')
+
+import signal
+
 import tornado.ioloop
 import tornado.web
 
-class CreateHandler(tornado.web.RequestHandler):
+from core import dungeon
+
+class DungeonsHandler(tornado.web.RequestHandler):
 	def get(self):
-		self.write("Hello, world")
+		modname = self.get_argument('mod')
+		w = int(self.get_argument('w', 128))
+		h = int(self.get_argument('h', 128))
+		kwargs = {k: vl[0] for k, vl in self.request.arguments.iteritems()}
+		kwargs.pop('mod', None)
+		kwargs.pop('w', None)
+		kwargs.pop('h', None)
+
+		obj = dungeon.newGenerator(modname, w, h, kwargs)
+		obj.generate()
 
 
 def main():
 	application = tornado.web.Application([
-		(r"/create", CreateHandler),
-	])
+		(r"/dungeons", DungeonsHandler),
+	],
+	debug=True, autoreload=True, serve_traceback=True)
+
 	application.listen(8181)
-	tornado.ioloop.IOLoop.current().start()
+	print 'server listen...'
+
+	ioloop = tornado.ioloop.IOLoop.current()
+	signal.signal(signal.SIGINT, lambda sig, frame: ioloop.add_callback_from_signal(ioloop.stop))
+	signal.signal(signal.SIGTERM, lambda sig, frame: ioloop.add_callback_from_signal(ioloop.stop))
+
+	ioloop.start()
+	print 'server stop'
 
 if __name__ == '__main__':
 	main()
