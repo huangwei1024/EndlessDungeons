@@ -21,9 +21,8 @@
 from __future__ import absolute_import
 
 import random
-from collections import namedtuple
 
-Room = namedtuple('Room', ('x', 'y', 'w', 'h'))
+from core.dungeon.base import Room, isRoomOverlapping
 
 class Generator(object):
 	def __init__(self, width=64, height=64, max_rooms=15, min_room_xy=5, max_room_xy=10, rooms_overlap=False, random_connections=1, random_spurs=3, **kwargs):
@@ -48,7 +47,7 @@ class Generator(object):
 
 	def _isOverlapping(self, room):
 		for r in self.room_list:
-			if not ((r.x + r.w < room.x or room.x + room.w < r.x) and (r.y + r.h < room.y or room.y + room.h < r.y)):
+			if isRoomOverlapping(r, room):
 				return True
 		return False
 
@@ -103,7 +102,8 @@ class Generator(object):
 		ret.wrapWall()
 		return ret
 
-
+	def getRooms(self):
+		return self.room_list
 
 
 

@@ -43,7 +43,6 @@ def convertStrDict(d):
 			pass
 		# print type(v), v, type(vv), vv
 		ret[k] = vv
-	print ret
 	return ret
 
 def ascii2html(s):
@@ -63,7 +62,8 @@ class DungeonsHandler(tornado.web.RequestHandler):
 		obj = dungeon.newGenerator(modname, w, h, kwargs)
 		grids = obj.generate()
 		if show:
-			self.render('dungeons.html', map=ascii2html(grids.show()), mod=modname, width=w, height=h, kwargs=kwargs)
+			rooms = obj.getRooms()
+			self.render('dungeons.html', map=ascii2html(grids.show()), mod=modname, width=w, height=h, rooms=rooms, kwargs=kwargs)
 		else:
 			self.write(grids.show())
 

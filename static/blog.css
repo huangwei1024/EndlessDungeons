@@ -52,20 +52,23 @@ h1 {
 
 pre,
 code {
-  font-family: monospace;
+  font-size: 8pt;
   color: #060;
-}
-
-pre {
-  margin: 0em;
-  padding: 0em;
+  margin-top: 1em;
+  padding: 1em;
   border-top: 1px solid silver;
   border-bottom: 1px solid silver;
   border-left: 1px solid silver;
   border-right: 1px solid silver;
-  line-height: 8pt;
   font-family: monospace, 'Lucida Console', Monaco;
-  font-size: 8pt;
+  word-wrap: break-word;
+}
+
+.map {
+  line-height: 8pt;
+  word-wrap: normal;
+  margin: 0em;
+  padding: 0em;
 }
 
 a,
