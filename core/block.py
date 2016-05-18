@@ -33,13 +33,14 @@ class Wall(_VisibleObject):
 
 class Road(_VisibleObject, Walkable):
 	Char = '.'
+	IDChars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 	def __init__(self, id=None):
 		self.id = id
 
 	@property
 	def char(self):
-		return str(self.id) if self.id else self.Char
+		return self.IDChars[self.id] if self.id is not None else self.Char
 
 class Door(_VisibleObject, Walkable, Lockable):
 	LockedChar = '+'

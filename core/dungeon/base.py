@@ -18,11 +18,49 @@
 import inspect
 from collections import namedtuple
 
-Room = namedtuple('Room', ('x', 'y', 'w', 'h'))
+class Room(object):
+	def __init__(self, x, y, w, h):
+		self.x = x
+		self.y = y
+		self.w = w
+		self.h = h
 
-def isRoomOverlapping(r1, r2):
-	return not ((r1.x + r1.w < r2.x or r2.x + r2.w < r1.x) and (r1.y + r1.h < r2.y or r2.y + r2.h < r1.y))
+	@property
+	def left(self):
+		return self.x
 
+	@property
+	def bottom(self):
+		return self.y
+
+	@property
+	def right(self):
+		return self.x + self.w - 1
+
+	@property
+	def top(self):
+		return self.y + self.h - 1
+
+	def expand(self, w, h):
+		self.w += w
+		self.h += h
+
+	def move(self, x, y):
+		self.x += x
+		self.y += y
+
+	def split(self, minx, miny, maxn=None):
+		pass
+
+	def __repr__(self):
+		return 'Room 0x%x <x=%d, y=%d, w=%d, h=%d, x2=%d, y2=%d>' % (id(self), self.x, self.y, self.w, self.h, self.right, self.top) 
+
+	def __str__(self):
+		return 'Room <x=%d, y=%d, w=%d, h=%d, x2=%d, y2=%d>' % (self.x, self.y, self.w, self.h, self.right, self.top)
+
+	def overlapping(self, r):
+		return not ((self.right < r.x or r.right < self.x) and (self.top < r.y or r.top < self.y))
+	
 
 class GeneratorBase(object):
 	def __init__(self):

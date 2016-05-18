@@ -62,7 +62,11 @@ class GridsMatrix(object):
 		return ret
 
 	def set(self, x, y, block, obj=None):
-		self.mat[y][x] = Grid(block, obj)
+		try:
+			self.mat[y][x] = Grid(block, obj)
+		except:
+			print x, y, self.width, self.height
+			raise
 
 	def wrapWall(self):
 		wallset = set()

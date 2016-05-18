@@ -20,12 +20,12 @@
 
 from __future__ import absolute_import
 
+import copy
 import random
 
 from core.dungeon.base import (
 	GeneratorBase,
 	Room,
-	isRoomOverlapping,
 )
 
 class Generator(GeneratorBase):
@@ -51,38 +51,61 @@ class Generator(GeneratorBase):
 		y = random.randint(1, (self.height - h - 1))
 		return Room(x, y, w, h)
 
+	def _getMinRoom(self):
+		x = random.randint(1, (self.width - self.min_room_xy - 1)) # edge is wall
+		y = random.randint(1, (self.height - self.min_room_xy - 1))
+		return Room(x, y, self.min_room_xy, self.min_room_xy)
+
 	def _isOverlapping(self, room):
 		for r in self.room_list:
-			if isRoomOverlapping(r, room):
+			if r.overlapping(room):
 				return True
 		return False
 
 	def _joinRooms(self, room1, room2):
 		x_overlap = y_overlap = False
-		if not (room2.x + room2.w < room1.x or room1.x + room1.w < room2.x):
+		if not (room2.right < room1.x or room1.right < room2.x):
 			x_overlap = True
-		if not (room2.y + room2.h < room1.y or room1.y + room1.h < room2.y):
+		if not (room2.top < room1.y or room1.top < room2.y):
 			y_overlap = True
 
-		xs = sorted([room1.x, room1.x, room1.x + room1.w, room2.x + room2.w])
-		ys = sorted([room1.y, room2.y, room1.y + room1.h, room2.y + room2.h])
+		xs = sorted([room1.left, room2.left, room1.right, room2.right])
+		ys = sorted([room1.bottom, room2.bottom, room1.top, room2.top])
 		if x_overlap:
-			x = random.randint(max(room1.x, room2.x), min(room1.x + room1.w, room2.x + room2.w))
+			x = random.randint(max(room1.left, room2.left), min(room1.right, room2.right))
 			self.corridor_list.append(Room(x, ys[1], 1, ys[2] - ys[1]))
 
 		elif y_overlap:
-			y = random.randint(max(room1.y, room2.y), min(room1.y + room1.h, room2.y + room2.h))
+			y = random.randint(max(room1.bottom, room2.bottom), min(room1.top, room2.top))
 			self.corridor_list.append(Room(xs[1], y, xs[2] - xs[1], 1))
 
 		else:
-			x = random.randint(xs[1], xs[2])
-			y = random.randint(ys[1], ys[2])
-			# self.corridor_list.append(Room(, , ))
+			ro = [room1, room2]
+			# random.shuffle(ro) # avoid road side-by-side
+			x = random.randint(ro[0].left, ro[0].right)
+			if ro[0].top < ro[1].top: # r0 down
+				h = random.randint(ro[1].bottom - ro[0].top, ro[1].top - ro[0].top)
+				self.corridor_list.append(Room(x, ro[0].top + 1, 1, h))
+				if ro[1].right < x: # left
+					w = x - ro[1].right
+					self.corridor_list.append(Room(ro[1].right + 1, ro[0].top + h, w, 1))
+				else:
+					w = ro[1].left - x
+					self.corridor_list.append(Room(x, ro[0].top + h, w, 1))
+			else: # r0 up
+				h = random.randint(ro[0].bottom - ro[1].top, ro[0].bottom - ro[1].bottom)
+				self.corridor_list.append(Room(x, ro[0].bottom - h, 1, h))
+				if ro[1].right < x: # left
+					w = x - ro[1].right
+					self.corridor_list.append(Room(ro[1].right + 1, ro[0].bottom - h, w, 1))
+				else:
+					w = ro[1].left - x
+					self.corridor_list.append(Room(x, ro[0].bottom - h, w, 1))
 
 	
 	def _fillGrid(self, grids, room, block):
-		for x in xrange(room.x, room.x + room.w):
-			for y in xrange(room.y, room.y + room.h):
+		for x in xrange(room.left, room.right + 1):
+			for y in xrange(room.bottom, room.top + 1):
 				grids.set(x, y, block)
 
 	def generate(self):
@@ -98,6 +121,27 @@ class Generator(GeneratorBase):
 			if len(self.room_list) >= self.max_rooms:
 				break
 
+		# build no overlap rooms
+		rooms = []
+		x, y = 1, 1
+		while x < self.width:
+			y = 1
+			while y < self.height:
+				room = Room(x, y, self.min_room_xy, self.min_room_xy)
+				if not (room.right >= self.width or room.top >= self.height or self._isOverlapping(room)):
+					rooms.append(room)
+				y += self.min_room_xy
+			x += 1
+
+		# print len(rooms)
+		# TODO
+		for room in rooms:
+			if not self._isOverlapping(room):
+				# room = Room(room.x, room.y, random.randint(self.min_room_xy, room.w), random.randint(self.min_room_xy, room.h))
+				self.room_list.append(room)
+				if len(self.room_list) >= self.max_rooms:
+					break
+
 		if len(self.room_list) == 1:
 			return
 
@@ -106,9 +150,12 @@ class Generator(GeneratorBase):
 			self._joinRooms(self.room_list[i], self.room_list[i + 1])
 
 		# random connect rooms
+		id_list = range(len(self.room_list))
 		for i in xrange(self.random_connections):
-			room1, room2 = random.sample(self.room_list, 2)
-			self._joinRooms(room1, room2)
+			id1, id2 = random.sample(id_list, 2)
+			if abs(id1 - id2) == 1: # existed connect road
+				continue
+			self._joinRooms(self.room_list[id1], self.room_list[id2])
 
 		# output
 		from core.grid import GridsMatrix
@@ -116,7 +163,7 @@ class Generator(GeneratorBase):
 
 		ret = GridsMatrix(self.width, self.height)
 		for i, room in enumerate(self.room_list):
-			self._fillGrid(ret, room, block.Road(i + 1))
+			self._fillGrid(ret, room, block.Road(i))
 
 		for room in self.corridor_list:
 			self._fillGrid(ret, room, block.Road())
@@ -125,7 +172,7 @@ class Generator(GeneratorBase):
 		return ret
 
 	def getRooms(self):
-		return self.room_list + [None] + self.corridor_list
+		return (self.room_list, self.corridor_list)
 
 
 
